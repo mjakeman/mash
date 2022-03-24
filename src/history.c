@@ -130,7 +130,7 @@ history_print (history_t *self)
     }
 
     for (iter = self->queue;
-         iter->next != NULL;
+         iter != NULL;
          iter = iter->next)
     {
         char *command;
