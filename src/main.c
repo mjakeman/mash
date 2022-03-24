@@ -20,30 +20,69 @@ void print_prompt ()
     printf ("[%s]# ", cur_dir);
 }
 
-typedef struct history_entry
+char *
+tokens_to_string (char **tokens)
+{
+    int buffer_size;
+    char *output;
+    char *token;
+    int index;
+    int cur_length;
+
+    if (!tokens || !tokens[0])
+        return NULL;
+
+    buffer_size = BUFFER_SIZE;
+    output = malloc (sizeof (char) * buffer_size);
+
+    index = 0;
+    token = tokens[index];
+    cur_length = 0;
+    while (token) {
+        int delta_length;
+
+        delta_length = strlen (token);
+
+        // check we haven't exceeded the maximum capacity of the buffer
+        if (cur_length + delta_length > buffer_size) {
+            buffer_size *= 2;
+            output = realloc (output, buffer_size);
+        }
+
+        // append string
+        strcat (output, token);
+
+        cur_length += delta_length;
+    }
+
+    return output;
+}
+
+typedef struct history_entry_t
 {
     int id;
-    char *command;
-    struct history_entry *next;
-} history_entry;
+    char **tokens;
+    struct history_entry_t *next;
+} history_entry_t;
 
 /**
  * history_entry_new:
  *
- * Allocates a new #history_entry structure
+ * Allocates a new #history_entry_t structure
  *
  * @id: Unique id for this entry
- * @command: String of the command (this function takes ownership)
+ * @tokens: String array of tokens (this function takes ownership)
  *
  */
-history_entry *
-history_entry_new (int id, char *command)
+history_entry_t *
+history_entry_new (int    id,
+                   char **tokens)
 {
-    history_entry *entry;
+    history_entry_t *entry;
 
-    entry = malloc (sizeof (history_entry));
+    entry = malloc (sizeof (history_entry_t));
     entry->id = id;
-    entry->command = command;
+    entry->tokens = tokens;
     entry->next = NULL;
 
     return entry;
@@ -54,17 +93,17 @@ history_entry_new (int id, char *command)
  *
  * Frees the memory of a history entry and clears the pointer.
  *
- * @pointer: Double pointer to a #history_entry.
+ * @pointer: Double pointer to a #history_entry_t.
  *
  */
 void
-history_entry_clear (history_entry **pointer)
+history_entry_clear (history_entry_t **pointer)
 {
-    history_entry *entry;
+    history_entry_t *entry;
 
     entry = *pointer;
 
-    free (entry->command);
+    free (entry->tokens);
     free (entry);
 
     *pointer = NULL;
@@ -72,24 +111,25 @@ history_entry_clear (history_entry **pointer)
 
 typedef struct
 {
-    history_entry *queue;
+    history_entry_t *queue;
     int n_entries;
     int cur_index;
-} history;
+} history_t;
 
 /**
  * history_queue:
- * Appends a #history_entry to the end of the queue
+ *
+ * Appends a #history_entry_t to the end of the queue
  *
  * @self pointer to history object
  * @entry entry to be appended
  *
  */
 static void
-history_queue (history       *self,
-               history_entry *entry)
+history_queue (history_t       *self,
+               history_entry_t *entry)
 {
-    history_entry *iter;
+    history_entry_t *iter;
 
     // queue is empty
     if (!self->queue) {
@@ -110,15 +150,16 @@ history_queue (history       *self,
 
 /**
  * history_dequeue:
- * Removes the first #history_entry in the queue
+ *
+ * Removes the first #history_entry_t in the queue
  *
  * @self pointer to history object
  *
  */
 static void
-history_dequeue (history *self)
+history_dequeue (history_t *self)
 {
-    history_entry *old;
+    history_entry_t *old;
 
     if (!self->queue) {
         fprintf (stderr, "Could not dequeue history as queue is empty\n");
@@ -134,20 +175,21 @@ history_dequeue (history *self)
 
 /**
  * history_push:
+ *
  * Pushes a command to the history queue, removing the oldest element if
  * total entries exceeds #MAX_HISTORY.
  *
  * @self pointer to history object
- * @command string of command to be entered
+ * @tokens string array of tokens
  *
  */
 void
-history_push (history *self,
-              char    *command)
+history_push (history_t  *self,
+              char      **tokens)
 {
-    history_entry *entry;
+    history_entry_t *entry;
 
-    entry = history_entry_new (self->cur_index++, strdup (command));
+    entry = history_entry_new (self->cur_index++, tokens);
 
     if (self->n_entries >= MAX_HISTORY)
         history_dequeue (self);
@@ -185,7 +227,10 @@ int main ()
 {
     printf ("mAsh! Matthew's Shell\n");
 
-    bool running = TRUE;
+    bool running;
+    history_t history;
+
+    running = TRUE;
 
     while (running)
     {
@@ -200,7 +245,7 @@ int main ()
 
         if (handle_builtin (tokens))
         {
-            free (tokens);
+            history_push (&history, tokens);
             continue;
         }
 
@@ -214,7 +259,6 @@ int main ()
         }
 
         waitpid (pid, NULL, 0);
-
-        free (tokens);
+        history_push (&history, tokens);
     }
 }
