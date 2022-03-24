@@ -2,19 +2,16 @@
 
 #include "input.h"
 #include "history.h"
+#include "builtin.h"
 
 #include <libgen.h>
 #include <sys/wait.h>
 
-typedef struct
+struct state_t
 {
     char *home_dir;
     history_t *history;
-} state_t;
-
-void
-dispatch (state_t  *state,
-          char    **tokens);
+};
 
 void print_prompt ()
 {
@@ -48,56 +45,17 @@ bool
 handle_builtin (state_t  *state,
                 char    **tokens)
 {
-    if (strcmp (tokens[0], "cd") == 0)
-    {
-        char *arg;
-
-        arg = tokens[1];
-
-        if (!arg) {
-            chdir (state->home_dir);
-            return TRUE;
-        }
-
-        if (chdir (arg) == -1) {
-            printf ("No such directory '%s'\n", arg);
-        }
-
-        return TRUE;
-    }
-    else if ((strcmp (tokens[0], "h") == 0) ||
-             (strcmp (tokens[0], "history") == 0))
-    {
-        char *arg;
-        int index;
-        int min;
-        int max;
-
-        arg = tokens[1];
-
-        if (!arg) {
-            history_print (state->history);
-            return TRUE;
-        }
-
-        history_get_range (state->history, &min, &max);
-
-        index = atoi (arg);
-        if (index >= min && index <= max) {
-            char **tokens;
-            tokens = history_get_tokens (state->history, index);
-            dispatch (state, tokens);
-            return TRUE;
-        }
-
-        printf ("Argument must be a number between %d and %d\n", min, max);
-
-        return TRUE;
-    }
-    else if (strcmp (tokens[0], "exit") == 0)
-    {
+    if (strcmp (tokens[0], "exit") == 0) {
         exit (EXIT_SUCCESS);
-        return TRUE; // will never return
+    }
+
+    if (strcmp (tokens[0], "cd") == 0) {
+        return builtin_run_chdir (tokens, state->home_dir);
+    }
+
+    if ((strcmp (tokens[0], "h") == 0) ||
+        (strcmp (tokens[0], "history") == 0)) {
+        return builtin_run_history (tokens, state, state->history);
     }
 
     return FALSE;
