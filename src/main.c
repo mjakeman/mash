@@ -49,6 +49,7 @@ handle_builtin (state_t  *state,
     else if (strcmp (tokens[0], "h") == 0)
     {
         // TODO: Handle number argument
+        // TODO: Handle long form name 'history'
         history_print (state->history);
         return TRUE;
     }
@@ -77,9 +78,10 @@ int main ()
         input = get_input ();
         tokens = parse_input (input, &n_tokens);
 
+        history_push (state.history, tokens);
+
         if (handle_builtin (&state, tokens))
         {
-            history_push (state.history, tokens);
             continue;
         }
 
@@ -93,6 +95,5 @@ int main ()
         }
 
         waitpid (pid, NULL, 0);
-        history_push (state.history, tokens);
     }
 }
