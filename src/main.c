@@ -90,6 +90,18 @@ execute (char **tokens)
     return result;
 }
 
+bool
+handle_builtin (char **tokens)
+{
+    if (strcmp (tokens[0], "cd") == 0)
+    {
+        chdir (tokens[1]);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 int main ()
 {
     printf ("mAsh! Matthew's Shell\n");
@@ -106,6 +118,12 @@ int main ()
         print_prompt ();
         input = get_input ();
         tokens = parse_input (input, &n_tokens);
+
+        if (handle_builtin (tokens))
+        {
+            free (tokens);
+            continue;
+        }
 
         pid = fork();
         if (pid == 0)
