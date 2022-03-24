@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <sys/wait.h>
 
 #define bool int
@@ -10,10 +11,18 @@
 #define TRUE 1
 
 #define TOKEN_ARRAY_SIZE 100
+#define BUFFER_SIZE 500
 
 void print_prompt ()
 {
-    printf ("# ");
+    char *cur_dir;
+    char cwd[BUFFER_SIZE];
+
+    cur_dir = "error";
+    if (getcwd (cwd, BUFFER_SIZE))
+        cur_dir = basename (cwd);
+
+    printf ("[%s]# ", cur_dir);
 }
 
 char *
