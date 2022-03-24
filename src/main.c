@@ -9,46 +9,94 @@
 #define FALSE 0
 #define TRUE 1
 
+#define TOKEN_ARRAY_SIZE 100
+
 void print_prompt ()
 {
     printf ("# ");
 }
 
-char **parse_input (char **command, int *n_tokens)
+char *
+get_input ()
 {
     char *buffer = NULL;
     size_t buffer_size = 0;
+    int length;
 
-    getline (&buffer, &buffer_size, stdin);
+    // Read in input up to a newline '\n' character
+    length = getline (&buffer, &buffer_size, stdin);
 
-    // a string with lots of spaces in it
-    //  -> an array of strings with no whitespace
-    //  -> string.split(my_str, " \t")
-
-    char *command_token;
-
-    command_token = strtok (buffer, " \t");
-    if (command_token == NULL)
-    {
-        *n_tokens = 0;
-        *command = NULL;
+    if (length == -1) {
+        fprintf (stderr, "Unable to read line\n");
         return NULL;
     }
 
-    *command = command_token;
+    // getline includes the newline character but no null
+    // termination. Replace the '\n' with '\0'.
+    if ((length > 0) && (buffer[length - 1] == '\n')) {
+        buffer[length - 1] = '\0';
+    }
 
-    char **tokens = malloc (sizeof(char*) * 100);
-    char *cur_token = command_token;
+    return buffer;
+}
 
-    int index = 0;
-    while (cur_token)
+char **
+parse_input (char  *input,
+             char **command,
+             int   *n_tokens)
+{
+    char *buffer;
+    char **tokens;
+    char *cur_token;
+    int index;
+
+    // Input is a string ending with \n
+    if (!input)
+        goto error;
+
+    // Get command token
+    cur_token = strtok (input, " \t");
+    *command = cur_token;
+
+    if (*command == NULL)
+        goto error;
+
+    // Get argument tokens
+    tokens = malloc (sizeof (char *) * TOKEN_ARRAY_SIZE);
+    index = 0;
+
+    while (TRUE)
     {
         cur_token = strtok (NULL, " \t");
+
+        if (!cur_token)
+            break;
+
         tokens[index++] = cur_token;
     }
 
     *n_tokens = index+1;
     return tokens;
+
+error:
+    *n_tokens = 0;
+    *command = NULL;
+    return NULL;
+}
+
+int
+execute (char  *command,
+         char **tokens)
+{
+    int result;
+
+    result = execvp (command, tokens);
+    if (result == -1)
+    {
+        printf ("No process '%s' \n", command);
+    }
+
+    return result;
 }
 
 int main ()
@@ -62,27 +110,25 @@ int main ()
         int n_tokens;
         char **tokens;
         char *command;
+        char *input;
+        pid_t pid;
 
         print_prompt ();
-        tokens = parse_input (&command, &n_tokens);
+        input = get_input ();
+        tokens = parse_input (input, &command, &n_tokens);
 
-        pid_t pid = fork();
+        pid = fork();
         if (pid == 0)
         {
-            // we are the child
-            int result = execvp (command, tokens);
+            int result;
 
-            if (result == -1)
-            {
-                printf ("No process '%s' \n", command);
-                return 1;
-            }
-
-            return 0;
+            result = execute (command, tokens);
+            return result;
         }
 
         waitpid (pid, NULL, 0);
 
         free (tokens);
+        free (command);
     }
 }
