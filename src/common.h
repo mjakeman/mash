@@ -1,3 +1,6 @@
+// common.h
+// Matthew Jakeman (mjak923)
+
 #pragma once
 
 #include <stdio.h>

@@ -1,3 +1,6 @@
+// input.c
+// Matthew Jakeman (mjak923)
+
 #include "input.h"
 
 #define TOKEN_ARRAY_SIZE 100

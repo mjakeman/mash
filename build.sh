@@ -1,1 +1,1 @@
-cc src/main.c src/input.c -o ash
+cc src/main.c src/input.c src/history.c -o ash

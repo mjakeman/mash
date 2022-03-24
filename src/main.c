@@ -1,3 +1,6 @@
+// main.c
+// Matthew Jakeman (mjak923)
+
 #include "common.h"
 
 #include "input.h"
