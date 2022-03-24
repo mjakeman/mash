@@ -36,6 +36,7 @@ execute (char **tokens)
 
 typedef struct
 {
+    char *home_dir;
     history_t *history;
 } state_t;
 
@@ -45,8 +46,17 @@ handle_builtin (state_t  *state,
 {
     if (strcmp (tokens[0], "cd") == 0)
     {
-        // TODO: Handle no such file or directory
-        chdir (tokens[1]);
+        char *arg = tokens[1];
+
+        if (!arg) {
+            chdir (state->home_dir);
+            return TRUE;
+        }
+
+        if (chdir (arg) == -1) {
+            printf ("No such directory '%s'\n", arg);
+        }
+
         return TRUE;
     }
     else if (strcmp (tokens[0], "h") == 0)
@@ -72,6 +82,8 @@ int main ()
     bool running;
     state_t state;
     state.history = history_new ();
+    state.home_dir = malloc (sizeof (char) * BUFFER_SIZE);
+    getcwd (state.home_dir, BUFFER_SIZE);
 
     running = TRUE;
 
