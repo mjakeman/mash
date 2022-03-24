@@ -126,7 +126,11 @@ struct history_t
 history_t *
 history_new ()
 {
-    return malloc (sizeof (history_t));
+    history_t *history;
+
+    history = malloc (sizeof (history_t));
+    history->cur_index = 1;
+    return history;
 }
 
 /**
