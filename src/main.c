@@ -1,6 +1,3 @@
-// main.c
-// Matthew Jakeman (mjak923)
-
 #include "common.h"
 
 #include "input.h"
@@ -46,6 +43,7 @@ handle_builtin (state_t  *state,
 {
     if (strcmp (tokens[0], "cd") == 0)
     {
+        // TODO: Handle no such file or directory
         chdir (tokens[1]);
         return TRUE;
     }
@@ -55,6 +53,11 @@ handle_builtin (state_t  *state,
         // TODO: Handle long form name 'history'
         history_print (state->history);
         return TRUE;
+    }
+    else if (strcmp (tokens[0], "exit") == 0)
+    {
+        exit (EXIT_SUCCESS);
+        return TRUE; // will never return
     }
 
     return FALSE;
