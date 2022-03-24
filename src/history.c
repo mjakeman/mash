@@ -126,6 +126,7 @@ history_print (history_t *self)
 
     if (!self->queue) {
         printf ("No items in history\n");
+        return;
     }
 
     for (iter = self->queue;
