@@ -50,6 +50,7 @@ handle_builtin (state_t  *state,
     {
         // TODO: Handle number argument
         history_print (state->history);
+        return TRUE;
     }
 
     return FALSE;
