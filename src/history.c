@@ -25,25 +25,41 @@ tokens_to_string (char **tokens)
 
     buffer_size = BUFFER_SIZE;
     output = malloc (sizeof (char) * buffer_size);
+    output[0] = '\0';
 
     index = 0;
     token = tokens[index];
     cur_length = 0;
     while (token) {
-        int delta_length;
+        int result;
+        int add_length;
 
-        delta_length = strlen (token);
+        add_length = strlen (token);
+        result = sprintf (output, "%s %s", output, token);
 
-        // check we haven't exceeded the maximum capacity of the buffer
-        if (cur_length + delta_length > buffer_size) {
-            buffer_size *= 2;
+        if (result < 0) {
+            int delta;
+
+            // Buffer is too small
+            // Increase buffer by the larger of BUFFER_SIZE or add_length
+            delta = BUFFER_SIZE > add_length
+                ? BUFFER_SIZE
+                : add_length;
+
+            // Reallocate output buffer
+            buffer_size += delta;
             output = realloc (output, buffer_size);
+
+            // Try again
+            result = sprintf (output, "%s %s", output, token);
+
+            if (result < 0) {
+                fprintf (stderr, "Error appending token - output may be corrupt\n");
+                return output;
+            }
         }
 
-        // append string
-        strcat (output, token);
-
-        cur_length += delta_length;
+        cur_length += add_length;
         token = tokens[++index];
     }
 
