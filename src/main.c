@@ -42,58 +42,49 @@ get_input ()
 
 char **
 parse_input (char  *input,
-             char **command,
              int   *n_tokens)
 {
-    char *buffer;
+    int index;
     char **tokens;
     char *cur_token;
-    int index;
 
     // Input is a string ending with \n
-    if (!input)
-        goto error;
+    if (!input) {
+        *n_tokens = 0;
+        return NULL;
+    }
 
-    // Get command token
-    cur_token = strtok (input, " \t");
-    *command = cur_token;
-
-    if (*command == NULL)
-        goto error;
-
-    // Get argument tokens
+    // Allocate tokens
     tokens = malloc (sizeof (char *) * TOKEN_ARRAY_SIZE);
     index = 0;
 
-    while (TRUE)
-    {
+    // Get command token
+    cur_token = strtok (input, " \t");
+
+    // Get argument tokens
+    while (cur_token) {
+        tokens[index++] = cur_token;
         cur_token = strtok (NULL, " \t");
 
-        if (!cur_token)
+        if (index > TOKEN_ARRAY_SIZE) {
+            fprintf (stderr, "Exceeded maximum number of arguments (%d)\n", TOKEN_ARRAY_SIZE);
             break;
-
-        tokens[index++] = cur_token;
+        }
     }
 
     *n_tokens = index+1;
     return tokens;
-
-error:
-    *n_tokens = 0;
-    *command = NULL;
-    return NULL;
 }
 
 int
-execute (char  *command,
-         char **tokens)
+execute (char **tokens)
 {
     int result;
 
-    result = execvp (command, tokens);
+    result = execvp (tokens[0], tokens);
     if (result == -1)
     {
-        printf ("No process '%s' \n", command);
+        printf ("No process '%s' \n", tokens[0]);
     }
 
     return result;
@@ -109,26 +100,24 @@ int main ()
     {
         int n_tokens;
         char **tokens;
-        char *command;
         char *input;
         pid_t pid;
 
         print_prompt ();
         input = get_input ();
-        tokens = parse_input (input, &command, &n_tokens);
+        tokens = parse_input (input, &n_tokens);
 
         pid = fork();
         if (pid == 0)
         {
             int result;
 
-            result = execute (command, tokens);
+            result = execute (tokens);
             return result;
         }
 
         waitpid (pid, NULL, 0);
 
         free (tokens);
-        free (command);
     }
 }
