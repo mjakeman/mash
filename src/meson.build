@@ -1,5 +1,6 @@
 sources = [
-  'main.c'
+  'main.c',
+  'input.c'
 ]
 
 executable('ash', sources, install : true)
