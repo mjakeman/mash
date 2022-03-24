@@ -125,6 +125,7 @@ struct history_t
  *
  * Creates a new #history_t structure.
  *
+ * Returns: New #history_t struct
  */
 history_t *
 history_new ()
@@ -134,6 +135,63 @@ history_new ()
     history = malloc (sizeof (history_t));
     history->cur_index = 1;
     return history;
+}
+
+/**
+ * history_get_max:
+ *
+ * Gets the maximum number of history entries
+ *
+ * @self: History object
+ * @min: (out) Integer with minimum index
+ * @max: (out) Integer with maximum index
+ */
+void
+history_get_range (history_t *self,
+                   int       *min,
+                   int       *max)
+{
+    if (self->n_entries == 0) {
+        *min = 0;
+        *max = 0;
+        return;
+    }
+
+    *min = self->cur_index - self->n_entries;
+    *max = self->cur_index - 1;
+}
+
+/**
+ * history_get_tokens:
+ *
+ * Retrieve tokens for given index from history.
+ *
+ * @self: History object
+ * @id: History index to lookup
+ *
+ * Returns: String array of tokens (owned by #history_t instance)
+ *
+ */
+char **
+history_get_tokens (history_t *self,
+                    int        id)
+{
+    int min, max;
+    history_entry_t *iter;
+
+    history_get_range (self, &min, &max);
+
+    if (id >= min && id <= max) {
+        for (iter = self->queue;
+             iter != NULL;
+             iter = iter->next) {
+            if (iter->id == id) {
+                return iter->tokens;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 /**

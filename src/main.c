@@ -6,6 +6,16 @@
 #include <libgen.h>
 #include <sys/wait.h>
 
+typedef struct
+{
+    char *home_dir;
+    history_t *history;
+} state_t;
+
+void
+dispatch (state_t  *state,
+          char    **tokens);
+
 void print_prompt ()
 {
     char *cur_dir;
@@ -34,19 +44,15 @@ execute (char **tokens)
     return result;
 }
 
-typedef struct
-{
-    char *home_dir;
-    history_t *history;
-} state_t;
-
 bool
 handle_builtin (state_t  *state,
                 char    **tokens)
 {
     if (strcmp (tokens[0], "cd") == 0)
     {
-        char *arg = tokens[1];
+        char *arg;
+
+        arg = tokens[1];
 
         if (!arg) {
             chdir (state->home_dir);
@@ -59,11 +65,33 @@ handle_builtin (state_t  *state,
 
         return TRUE;
     }
-    else if (strcmp (tokens[0], "h") == 0)
+    else if ((strcmp (tokens[0], "h") == 0) ||
+             (strcmp (tokens[0], "history") == 0))
     {
-        // TODO: Handle number argument
-        // TODO: Handle long form name 'history'
-        history_print (state->history);
+        char *arg;
+        int index;
+        int min;
+        int max;
+
+        arg = tokens[1];
+
+        if (!arg) {
+            history_print (state->history);
+            return TRUE;
+        }
+
+        history_get_range (state->history, &min, &max);
+
+        index = atoi (arg);
+        if (index >= min && index <= max) {
+            char **tokens;
+            tokens = history_get_tokens (state->history, index);
+            dispatch (state, tokens);
+            return TRUE;
+        }
+
+        printf ("Argument must be a number between %d and %d\n", min, max);
+
         return TRUE;
     }
     else if (strcmp (tokens[0], "exit") == 0)
@@ -73,6 +101,29 @@ handle_builtin (state_t  *state,
     }
 
     return FALSE;
+}
+
+void
+dispatch (state_t  *state,
+          char    **tokens)
+{
+    pid_t pid;
+
+    history_push (state->history, tokens);
+
+    if (handle_builtin (state, tokens))
+        return;
+
+    pid = fork();
+    if (pid == 0)
+    {
+        int result;
+
+        result = execute (tokens);
+        exit (result);
+    }
+
+    waitpid (pid, NULL, 0);
 }
 
 int main ()
@@ -92,28 +143,11 @@ int main ()
         int n_tokens;
         char **tokens;
         char *input;
-        pid_t pid;
 
         print_prompt ();
         input = get_input ();
         tokens = parse_input (input, &n_tokens);
 
-        history_push (state.history, tokens);
-
-        if (handle_builtin (&state, tokens))
-        {
-            continue;
-        }
-
-        pid = fork();
-        if (pid == 0)
-        {
-            int result;
-
-            result = execute (tokens);
-            return result;
-        }
-
-        waitpid (pid, NULL, 0);
+        dispatch (&state, tokens);
     }
 }
