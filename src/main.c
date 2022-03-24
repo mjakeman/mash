@@ -15,7 +15,9 @@ void print_prompt ()
     if (getcwd (cwd, BUFFER_SIZE))
         cur_dir = basename (cwd);
 
+    printf (ANSI_COLOR_RED);
     printf ("[%s]# ", cur_dir);
+    printf (ANSI_COLOR_RESET);
 }
 
 int
