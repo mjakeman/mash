@@ -28,10 +28,16 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-// Opaque state structure
+// Opaque structures
 struct state_t;
 typedef struct state_t state_t;
 
+struct invocation_t;
+typedef struct invocation_t invocation_t;
+
+struct command_t;
+typedef struct command_t command_t;
+
 // Dispatch method
-void dispatch (state_t  *state,
-               char    **tokens);
+void dispatch (state_t      *state,
+               invocation_t *invocation);

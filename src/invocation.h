@@ -5,9 +5,6 @@
 
 #include "common.h"
 
-typedef struct command_t command_t;
-typedef struct invocation_t invocation_t;
-
 struct command_t
 {
     int index;

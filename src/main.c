@@ -8,6 +8,9 @@
 #include <libgen.h>
 #include <sys/wait.h>
 
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
 struct state_t
 {
     char *home_dir;
@@ -29,15 +32,25 @@ void print_prompt ()
 }
 
 int
-execute (char **tokens)
+execute (char **tokens,
+         int    n_tokens)
 {
     int result;
+    char **tokens_cpy;
 
-    result = execvp (tokens[0], tokens);
+    // copy as null terminated array
+    tokens_cpy = malloc (sizeof (char *) * (n_tokens + 1));
+    memcpy (tokens_cpy, tokens, n_tokens * sizeof (char *));
+    tokens_cpy [n_tokens] = NULL;
+
+    // execute command and tokens
+    result = execvp (tokens_cpy[0], tokens_cpy);
     if (result == -1)
     {
-        printf ("No process '%s' \n", tokens[0]);
+        printf ("No process '%s' \n", tokens_cpy[0]);
     }
+
+    free (tokens_cpy);
 
     return result;
 }
@@ -64,31 +77,84 @@ handle_builtin (state_t  *state,
 }
 
 void
-dispatch (state_t  *state,
-          char    **tokens)
+dispatch (state_t      *state,
+          invocation_t *invocation)
 {
+    command_t *command;
     pid_t pid;
 
-    if (!tokens || !(*tokens)) {
-        return;
+    int old_pipe_fds[2];
+    int new_pipe_fds[2];
+
+    bool has_prev_command;
+    bool has_next_command;
+
+    has_prev_command = FALSE;
+
+    // history_push (state->history, tokens);
+
+    // loop over all commands
+    for (command = invocation->commands;
+         command != NULL;
+         command = command->next) {
+
+        has_next_command = (command->next != NULL);
+
+        if (pipe (new_pipe_fds) == -1) {
+            fprintf (stderr, "Error creating pipe\n");
+            exit (EXIT_FAILURE);
+        }
+
+        pid = fork ();
+
+        if (pid == 0) {
+            // child process
+            if (has_prev_command) {
+                // connect to the previous command's stdout
+                dup2 (old_pipe_fds[PIPE_READ], STDIN_FILENO);
+            }
+
+            if (has_next_command) {
+                // setup for the next command's stdin
+                dup2 (new_pipe_fds[PIPE_WRITE], STDOUT_FILENO);
+            }
+
+            // close all file descriptors
+            close (old_pipe_fds[PIPE_READ]);
+            close (old_pipe_fds[PIPE_WRITE]);
+            close (new_pipe_fds[PIPE_WRITE]);
+            close (new_pipe_fds[PIPE_READ]);
+
+            // execute for tokens
+            execute (&invocation->tokens[command->index], command->n_tokens);
+            exit (EXIT_FAILURE);
+        }
+
+        if (has_prev_command) {
+            // close all pipes on the parent
+            close (old_pipe_fds[PIPE_READ]);
+            close (old_pipe_fds[PIPE_WRITE]);
+        }
+
+        // set old pipe to current pipe and repeat
+        old_pipe_fds[PIPE_READ] = new_pipe_fds[PIPE_READ];
+        old_pipe_fds[PIPE_WRITE] = new_pipe_fds[PIPE_WRITE];
+
+        has_prev_command = TRUE;
     }
 
-    history_push (state->history, tokens);
-
-    if (handle_builtin (state, tokens)) {
-        return;
-    }
-
-    pid = fork();
-
-    if (pid == 0) {
-        int result;
-
-        result = execute (tokens);
-        exit (result);
+    // if we have more than one command then these
+    // pipes also need to be closed
+    if (has_prev_command) {
+        close (new_pipe_fds[PIPE_READ]);
+        close (new_pipe_fds[PIPE_WRITE]);
     }
 
     waitpid (pid, NULL, 0);
+
+    /*if (handle_builtin (state, tokens)) {
+        return;
+    }*/
 }
 
 int main ()
@@ -106,30 +172,14 @@ int main ()
     while (running)
     {
         invocation_t *invocation;
-        command_t *command;
         char *input;
 
         print_prompt ();
         input = get_input ();
         invocation = parse_input (input);
 
-        for (command = invocation->commands;
-             command != NULL;
-             command = command->next) {
-            int index;
-            int n_tokens;
-
-            index = command->index;
-            n_tokens = command->n_tokens;
-
-            printf ("command: %d %d\n", index, n_tokens);
-
-            for (int i = 0; i < n_tokens; i++)
-                printf ("%s\n", invocation->tokens[index + i]);
-        }
+        dispatch (&state, invocation);
 
         // invocation_free (invocation);
-
-        // dispatch (&state, tokens);
     }
 }
