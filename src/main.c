@@ -64,40 +64,38 @@ job_dir_register_job (job_dir_t *self,
 }
 
 void
-job_dir_unregister_job (job_dir_t *self,
-                        job_t     *job)
+job_dir_flush (job_dir_t *self)
 {
     job_t *iter;
-
-    if (!job) {
-        return;
-    }
-
-    if (self->jobs == job) {
-        self->jobs = job->next;
-
-        free (job);
-        if (--self->n_jobs == 0) {
-            self->cur_id = 1;
-        }
-        return;
-    }
+    job_t *prev;
 
     iter = self->jobs;
+    prev = NULL;
+
     while (iter != NULL) {
 
-        if (iter->next == job) {
+        // remove dirty iterator elements
+        if (iter->dirty) {
             job_t *after;
-            after = iter->next->next;
-            iter->next = after;
 
-            free (job);
+            after = iter->next;
+
+            if (!prev) {
+                self->jobs = after;
+            } else {
+                prev->next = after;
+            }
+
+            free (iter);
             if (--self->n_jobs == 0) {
                 self->cur_id = 1;
             }
-            return;
+
+            iter = after;
+            continue;
         }
 
+        prev = iter;
         iter = iter->next;
     }
 }
@@ -238,6 +236,8 @@ int main ()
         char *input;
 
         // check jobs
+        job_dir_iterate (state.jobs);
+        job_dir_flush (state.jobs);
         job_dir_print_all (state.jobs);
 
         print_prompt ();
