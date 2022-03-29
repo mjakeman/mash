@@ -14,6 +14,7 @@
 #define TRUE 1
 
 #define BUFFER_SIZE 500
+#define TOKEN_ARRAY_SIZE 100
 
 // Colour Output
 // This uses ANSI escape codes to colour the terminal output. On platforms

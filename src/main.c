@@ -3,6 +3,7 @@
 #include "input.h"
 #include "history.h"
 #include "builtin.h"
+#include "invocation.h"
 
 #include <libgen.h>
 #include <sys/wait.h>
@@ -126,6 +127,8 @@ int main ()
             for (int i = 0; i < n_tokens; i++)
                 printf ("%s\n", invocation->tokens[index + i]);
         }
+
+        // invocation_free (invocation);
 
         // dispatch (&state, tokens);
     }
