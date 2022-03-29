@@ -104,14 +104,29 @@ int main ()
 
     while (running)
     {
-        int n_tokens;
-        char **tokens;
+        invocation_t *invocation;
+        command_t *command;
         char *input;
 
         print_prompt ();
         input = get_input ();
-        tokens = parse_input (input, &n_tokens);
+        invocation = parse_input (input);
 
-        dispatch (&state, tokens);
+        for (command = invocation->commands;
+             command != NULL;
+             command = command->next) {
+            int index;
+            int n_tokens;
+
+            index = command->index;
+            n_tokens = command->n_tokens;
+
+            printf ("command: %d %d\n", index, n_tokens);
+
+            for (int i = 0; i < n_tokens; i++)
+                printf ("%s\n", invocation->tokens[index + i]);
+        }
+
+        // dispatch (&state, tokens);
     }
 }
