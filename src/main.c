@@ -55,6 +55,7 @@ handle_builtin (state_t  *state,
 
     if ((strcmp (tokens[0], "h") == 0) ||
         (strcmp (tokens[0], "history") == 0)) {
+        // TODO: Handle equivalent history index (i.e. on the fourth command, issuing 'h 4')
         return builtin_run_history (tokens, state, state->history);
     }
 
@@ -67,14 +68,19 @@ dispatch (state_t  *state,
 {
     pid_t pid;
 
+    if (!tokens || !(*tokens)) {
+        return;
+    }
+
     history_push (state->history, tokens);
 
-    if (handle_builtin (state, tokens))
+    if (handle_builtin (state, tokens)) {
         return;
+    }
 
     pid = fork();
-    if (pid == 0)
-    {
+
+    if (pid == 0) {
         int result;
 
         result = execute (tokens);
