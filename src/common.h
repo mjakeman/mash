@@ -13,6 +13,9 @@
 #define FALSE 0
 #define TRUE 1
 
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
 #define BUFFER_SIZE 500
 #define TOKEN_ARRAY_SIZE 100
 

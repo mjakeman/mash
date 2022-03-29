@@ -4,12 +4,10 @@
 #include "history.h"
 #include "builtin.h"
 #include "invocation.h"
+#include "process.h"
 
 #include <libgen.h>
 #include <sys/wait.h>
-
-#define PIPE_READ 0
-#define PIPE_WRITE 1
 
 struct state_t
 {
@@ -29,31 +27,6 @@ void print_prompt ()
     printf (ANSI_COLOR_RED);
     printf ("[%s]# ", cur_dir);
     printf (ANSI_COLOR_RESET);
-}
-
-int
-execute (invocation_t *invocation,
-         command_t    *command)
-{
-    int result;
-    char **tokens;
-
-    // get tokens as null terminated array
-    tokens = invocation_command_get_tokens (invocation, command);
-
-    if (!tokens)
-        return EXIT_FAILURE;
-
-    // execute command and tokens
-    result = execvp (tokens[0], tokens);
-    if (result == -1)
-    {
-        printf ("No process '%s' \n", tokens[0]);
-    }
-
-    free (tokens);
-
-    return result;
 }
 
 bool
@@ -94,16 +67,7 @@ void
 dispatch (state_t      *state,
           invocation_t *invocation)
 {
-    command_t *command;
     pid_t pid;
-
-    int old_pipe_fds[2];
-    int new_pipe_fds[2];
-
-    bool has_prev_command;
-    bool has_next_command;
-
-    has_prev_command = FALSE;
 
     // history_push (state->history, tokens);
 
@@ -114,66 +78,17 @@ dispatch (state_t      *state,
         return;
     }
 
+    // execute process, including pipelines
+    pid = process_run (invocation);
+
     printf ("is-job: %d\n", invocation->is_job);
 
-    // loop over all commands
-    for (command = invocation->commands;
-         command != NULL;
-         command = command->next) {
-
-        has_next_command = (command->next != NULL);
-
-        if (pipe (new_pipe_fds) == -1) {
-            fprintf (stderr, "Error creating pipe\n");
-            exit (EXIT_FAILURE);
-        }
-
-        pid = fork ();
-
-        if (pid == 0) {
-            // child process
-            if (has_prev_command) {
-                // connect to the previous command's stdout
-                dup2 (old_pipe_fds[PIPE_READ], STDIN_FILENO);
-            }
-
-            if (has_next_command) {
-                // setup for the next command's stdin
-                dup2 (new_pipe_fds[PIPE_WRITE], STDOUT_FILENO);
-            }
-
-            // close all file descriptors
-            close (old_pipe_fds[PIPE_READ]);
-            close (old_pipe_fds[PIPE_WRITE]);
-            close (new_pipe_fds[PIPE_WRITE]);
-            close (new_pipe_fds[PIPE_READ]);
-
-            // execute for tokens
-            execute (invocation, command);
-            exit (EXIT_FAILURE);
-        }
-
-        if (has_prev_command) {
-            // close all pipes on the parent
-            close (old_pipe_fds[PIPE_READ]);
-            close (old_pipe_fds[PIPE_WRITE]);
-        }
-
-        // set old pipe to current pipe and repeat
-        old_pipe_fds[PIPE_READ] = new_pipe_fds[PIPE_READ];
-        old_pipe_fds[PIPE_WRITE] = new_pipe_fds[PIPE_WRITE];
-
-        has_prev_command = TRUE;
+    if (invocation->is_job) {
+        // push new job to directory
     }
-
-    // if we have more than one command then these
-    // pipes also need to be closed
-    if (has_prev_command) {
-        close (new_pipe_fds[PIPE_READ]);
-        close (new_pipe_fds[PIPE_WRITE]);
+    else {
+        waitpid (pid, NULL, 0);
     }
-
-    waitpid (pid, NULL, 0);
 }
 
 int main ()
