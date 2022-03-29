@@ -4,7 +4,8 @@ sources = [
   'history.c',
   'builtin.c',
   'invocation.c',
-  'process.c'
+  'process.c',
+  'job.c'
 ]
 
 executable('ash', sources, install : true)
