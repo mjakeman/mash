@@ -42,6 +42,8 @@ process_run (invocation_t *invocation)
 
     has_prev_command = FALSE;
 
+    pid = -1;
+
     // loop over all commands
     for (command = invocation->commands;
          command != NULL;
