@@ -93,6 +93,12 @@ dispatch (state_t      *state,
 
     // history_push (state->history, tokens);
 
+    /*if (handle_builtin (state, invocation)) {
+        return;
+    }*/
+
+    printf ("is-job: %d\n", invocation->is_job);
+
     // loop over all commands
     for (command = invocation->commands;
          command != NULL;
@@ -151,10 +157,6 @@ dispatch (state_t      *state,
     }
 
     waitpid (pid, NULL, 0);
-
-    /*if (handle_builtin (state, tokens)) {
-        return;
-    }*/
 }
 
 int main ()

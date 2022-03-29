@@ -2,6 +2,7 @@
 // Matthew Jakeman (mjak923)
 
 #include "input.h"
+#include "invocation.h"
 
 char *
 get_input ()
@@ -70,9 +71,21 @@ parse_input (char *input)
         }
     }
 
-    // only push if last token is not pipe
-    if (cmd_size != 0) {
-        invocation_push_command (invocation, index - cmd_size, cmd_size);
+    // check if last token is '&'
+    if (index > 0 && strcmp (tokens[index-1], "&") == 0) {
+        invocation->is_job = TRUE;
+    }
+
+    index = index - cmd_size;
+
+    // exclude '&' token if job
+    cmd_size = invocation->is_job
+        ? cmd_size-1
+        : cmd_size;
+
+    // push final command
+    if (cmd_size > 0) {
+        invocation_push_command (invocation, index, cmd_size);
     }
 
     return invocation;
