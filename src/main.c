@@ -32,33 +32,45 @@ void print_prompt ()
 }
 
 int
-execute (char **tokens,
-         int    n_tokens)
+execute (invocation_t *invocation,
+         command_t    *command)
 {
     int result;
-    char **tokens_cpy;
+    char **tokens;
 
-    // copy as null terminated array
-    tokens_cpy = malloc (sizeof (char *) * (n_tokens + 1));
-    memcpy (tokens_cpy, tokens, n_tokens * sizeof (char *));
-    tokens_cpy [n_tokens] = NULL;
+    // get tokens as null terminated array
+    tokens = invocation_command_get_tokens (invocation, command);
+
+    if (!tokens)
+        return EXIT_FAILURE;
 
     // execute command and tokens
-    result = execvp (tokens_cpy[0], tokens_cpy);
+    result = execvp (tokens[0], tokens);
     if (result == -1)
     {
-        printf ("No process '%s' \n", tokens_cpy[0]);
+        printf ("No process '%s' \n", tokens[0]);
     }
 
-    free (tokens_cpy);
+    free (tokens);
 
     return result;
 }
 
 bool
-handle_builtin (state_t  *state,
-                char    **tokens)
+handle_builtin (state_t      *state,
+                invocation_t *invocation)
 {
+    command_t *first_command;
+    char **tokens;
+
+    first_command = invocation->commands;
+
+    if (!first_command || !(first_command->n_tokens))
+        return FALSE;
+
+    // get tokens as null terminated array
+    tokens = invocation_command_get_tokens (invocation, first_command);
+
     if (strcmp (tokens[0], "exit") == 0) {
         exit (EXIT_SUCCESS);
     }
@@ -70,8 +82,10 @@ handle_builtin (state_t  *state,
     if ((strcmp (tokens[0], "h") == 0) ||
         (strcmp (tokens[0], "history") == 0)) {
         // TODO: Handle equivalent history index (i.e. on the fourth command, issuing 'h 4')
-        return builtin_run_history (tokens, state, state->history);
+        // return builtin_run_history (tokens, state, state->history);
     }
+
+    free (tokens);
 
     return FALSE;
 }
@@ -93,9 +107,12 @@ dispatch (state_t      *state,
 
     // history_push (state->history, tokens);
 
-    /*if (handle_builtin (state, invocation)) {
+    // check if built-in and return, otherwise proceed as normal
+    //  - from piazza @23: ignore the use of built-in commands in pipelines
+    //  - from piazza @30: do not need to run built-in commands as jobs
+    if (handle_builtin (state, invocation)) {
         return;
-    }*/
+    }
 
     printf ("is-job: %d\n", invocation->is_job);
 
@@ -132,7 +149,7 @@ dispatch (state_t      *state,
             close (new_pipe_fds[PIPE_READ]);
 
             // execute for tokens
-            execute (&invocation->tokens[command->index], command->n_tokens);
+            execute (invocation, command);
             exit (EXIT_FAILURE);
         }
 
@@ -175,6 +192,8 @@ int main ()
     {
         invocation_t *invocation;
         char *input;
+
+        // check jobs
 
         print_prompt ();
         input = get_input ();

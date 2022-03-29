@@ -11,6 +11,26 @@ invocation_new ()
     return result;
 }
 
+char **
+invocation_command_get_tokens (invocation_t *self,
+                               command_t    *command)
+{
+    char **tokens_cpy;
+    int n_tokens;
+    int index;
+
+    n_tokens = command->n_tokens;
+    index = command->index;
+
+    // return a null terminated array containing
+    // only the tokens for this command (needed for execvp)
+    tokens_cpy = malloc (sizeof (char *) * (n_tokens + 1));
+    memcpy (tokens_cpy, &self->tokens[index], n_tokens * sizeof (char *));
+    tokens_cpy [n_tokens] = NULL;
+
+    return tokens_cpy;
+}
+
 void
 invocation_push_command (invocation_t *self,
                          int           index,

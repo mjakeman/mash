@@ -28,5 +28,9 @@ invocation_push_command (invocation_t *self,
                          int           index,
                          int           n_tokens);
 
+char **
+invocation_command_get_tokens (invocation_t *self,
+                               command_t    *command);
+
 invocation_t *
 invocation_new ();

@@ -69,6 +69,8 @@ builtin_run_history (char      **tokens,
     if (index >= min && index <= max) {
         char **tokens;
         tokens = history_get_tokens (history, index);
+
+        // todo: pass in invocation
         dispatch (state, tokens);
         return TRUE;
     }
