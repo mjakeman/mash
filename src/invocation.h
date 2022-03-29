@@ -33,4 +33,7 @@ invocation_command_get_tokens (invocation_t *self,
                                command_t    *command);
 
 invocation_t *
+invocation_copy (invocation_t *self);
+
+invocation_t *
 invocation_new ();

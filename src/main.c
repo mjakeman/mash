@@ -90,7 +90,7 @@ dispatch (state_t      *state,
 
     if (invocation->is_job) {
         // push new job to directory
-        job_dir_register_job (state->jobs, pid);
+        job_dir_register_job (state->jobs, invocation, pid);
     }
     else {
         waitpid (pid, NULL, 0);

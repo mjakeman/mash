@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#include "invocation.h"
+
 struct job_t;
 typedef struct job_t job_t;
 
@@ -13,8 +15,9 @@ job_dir_t *
 job_dir_new ();
 
 void
-job_dir_register_job (job_dir_t *self,
-                      pid_t      pid);
+job_dir_register_job (job_dir_t    *self,
+                      invocation_t *invocation,
+                      pid_t         pid);
 
 void
 job_dir_flush (job_dir_t *self);

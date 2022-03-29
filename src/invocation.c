@@ -61,6 +61,48 @@ invocation_push_command (invocation_t *self,
     }
 }
 
+invocation_t *
+invocation_copy (invocation_t *self)
+{
+    invocation_t *new;
+    size_t token_size;
+    command_t *old_iter;
+    command_t *prev;
+
+    // deep copy
+    new = malloc (sizeof (invocation_t));
+    new->is_job = self->is_job;
+    new->n_commands = self->is_job;
+
+    token_size = sizeof (char *) * TOKEN_ARRAY_SIZE;
+    new->tokens = malloc (token_size);
+    memcpy (new->tokens, self->tokens, token_size);
+
+    prev = NULL;
+
+    // deep copy commands
+    for (old_iter = self->commands;
+         old_iter != NULL;
+         old_iter = old_iter->next) {
+
+        command_t *command;
+        command = malloc (sizeof (command_t));
+        memcpy (old_iter, command, sizeof (command_t));
+        command->next = NULL;
+
+        if (prev) {
+            prev->next = command;
+        }
+        else {
+            new->commands = command;
+        }
+
+        prev = command;
+    }
+
+    return new;
+}
+
 void
 invocation_free (invocation_t *self)
 {

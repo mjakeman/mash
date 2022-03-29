@@ -16,6 +16,7 @@ struct job_t
 {
     int id;
     pid_t pid;
+    invocation_t *invocation;
     struct job_t *next;
     bool dirty;
 };
@@ -29,8 +30,9 @@ job_dir_new ()
 }
 
 void
-job_dir_register_job (job_dir_t *self,
-                      pid_t      pid)
+job_dir_register_job (job_dir_t    *self,
+                      invocation_t *invocation,
+                      pid_t         pid)
 {
     job_t *iter;
     job_t *job;
@@ -38,6 +40,7 @@ job_dir_register_job (job_dir_t *self,
     job = malloc (sizeof (job_t));
     job->pid = pid;
     job->id = self->cur_id++;
+    job->invocation = invocation_copy (invocation);
 
     printf ("[%d]   %d\n", job->id, job->pid);
 
