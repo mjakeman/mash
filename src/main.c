@@ -71,6 +71,7 @@ dispatch (state_t      *state,
 {
     pid_t pid;
 
+    // todo: fix history
     // history_push (state->history, tokens);
 
     // check if built-in and return, otherwise proceed as normal
@@ -125,6 +126,9 @@ int main ()
 
         dispatch (&state, invocation);
 
+        // todo: memory management
         // invocation_free (invocation);
     }
+
+    // todo: kill all job processes
 }

@@ -3,6 +3,8 @@
 
 #include "job.h"
 
+#include <sys/wait.h>
+
 struct job_dir_t
 {
     int n_jobs;
@@ -36,6 +38,8 @@ job_dir_register_job (job_dir_t *self,
     job = malloc (sizeof (job_t));
     job->pid = pid;
     job->id = self->cur_id++;
+
+    printf ("[%d]   %d\n", job->id, job->pid);
 
     if (!self->jobs) {
         self->jobs = job;
@@ -107,6 +111,9 @@ job_dir_iterate (job_dir_t *self)
 
             // flag job for removal
             iter->dirty = TRUE;
+
+            // todo: pass invocation to job
+            printf ("[%d] <Done>  %s\n", iter->id, "COMMAND GOES HERE");
         }
     }
 }
