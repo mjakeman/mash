@@ -28,6 +28,48 @@ execute (invocation_t *invocation,
     return result;
 }
 
+enum process_state
+process_get_state (pid_t pid)
+{
+    enum process_state result;
+    char path[BUFFER_SIZE];
+    FILE *fd;
+
+    char pid_str[BUFFER_SIZE];
+    char cmd[BUFFER_SIZE];
+    char status[BUFFER_SIZE];
+
+    sprintf (path, "/proc/%d/stat", pid);
+
+    result = PROCESS_STATE_UNKNOWN;
+
+    fd = fopen (path, "r");
+
+    if (fd) {
+        fscanf (fd, "%s %s %s", pid_str, cmd, status);
+        printf ("status: %s\n", status);
+
+        if (strcmp (status, "S") == 0)
+            result = PROCESS_STATE_SLEEPING;
+
+        else if (strcmp (status, "R") == 0)
+            result = PROCESS_STATE_RUNNABLE;
+
+        else if (strcmp (status, "T") == 0)
+            result = PROCESS_STATE_STOPPED;
+
+        else if (strcmp (status, "D") == 0)
+            result = PROCESS_STATE_IDLE;
+
+        else if (strcmp (status, "Z") == 0)
+            result = PROCESS_STATE_ZOMBIE;
+    }
+
+    fclose (fd);
+
+    return result;
+}
+
 pid_t
 process_run (invocation_t *invocation)
 {

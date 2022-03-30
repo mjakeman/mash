@@ -3,6 +3,8 @@
 
 #include "job.h"
 
+#include "process.h"
+
 #include <sys/wait.h>
 
 struct job_dir_t
@@ -109,6 +111,7 @@ job_dir_iterate (job_dir_t *self)
     for (iter = self->jobs;
          iter != NULL;
          iter = iter->next) {
+        process_get_state (iter->pid);
         if (waitpid (iter->pid, NULL, WNOHANG)) {
             char *string;
             // job state has changed
