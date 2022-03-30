@@ -1,3 +1,6 @@
+# src/meson.build
+# Matthew Jakeman (mjak923)
+
 sources = [
   'main.c',
   'input.c',

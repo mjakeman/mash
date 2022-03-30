@@ -1,3 +1,6 @@
+# meson.build
+# Matthew Jakeman (mjak923)
+
 project('ash', 'c',
           version: '0.1.0',
     meson_version: '>= 0.59.0',
@@ -6,18 +9,4 @@ project('ash', 'c',
                    ],
 )
 
-
-
-config_h = configuration_data()
-config_h.set_quoted('PACKAGE_VERSION', meson.project_version())
-configure_file(
-  output: 'ash-config.h',
-  configuration: config_h,
-)
-add_project_arguments([
-  '-I' + meson.project_build_root(),
-], language: 'c')
-
-
 subdir('src')
-
