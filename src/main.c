@@ -15,7 +15,12 @@ struct state_t
     char *home_dir;
     history_t *history;
     job_dir_t *jobs;
+
+    pid_t active_pid;
+    invocation_t *active_invocation;
 };
+
+static state_t state;
 
 void print_prompt ()
 {
@@ -97,8 +102,28 @@ dispatch (state_t      *state,
         job_dir_register_job (state->jobs, invocation, pid);
     }
     else {
-        waitpid (pid, NULL, 0);
+        if (state->active_pid) {
+            state->active_pid = -1;
+            invocation_free (state->active_invocation);
+        }
+
+        state->active_pid = pid;
+        state->active_invocation = invocation_copy (invocation);
+        waitpid (pid, NULL, WUNTRACED);
     }
+}
+
+void
+handler ()
+{
+    kill (state.active_pid, SIGSTOP);
+    signal (SIGTSTP, handler);
+    printf ("\n");
+
+    // Register job
+    job_dir_register_job (state.jobs,
+                          state.active_invocation,
+                          state.active_pid);
 }
 
 int main ()
@@ -106,11 +131,12 @@ int main ()
     printf ("mAsh! Matthew's Shell\n");
 
     bool running;
-    state_t state;
     state.history = history_new ();
     state.jobs = job_dir_new ();
     state.home_dir = calloc (1, sizeof (char) * BUFFER_SIZE);
     getcwd (state.home_dir, BUFFER_SIZE);
+
+    signal (SIGTSTP, handler);
 
     running = TRUE;
 

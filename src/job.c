@@ -28,6 +28,7 @@ job_dir_new ()
 {
     job_dir_t *self;
     self = calloc (1, sizeof (job_dir_t));
+    self->cur_id = 1;
     return self;
 }
 
