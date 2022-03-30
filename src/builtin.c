@@ -107,39 +107,24 @@ builtin_run_kill (char      **tokens,
  * @state: Opaque shell state structure
  * @history: History object
  *
- * Returns: Whether the builtin was handled successfully
+ * Returns: Whether the builtin should inhibit normal execution
  *
  */
 bool
-builtin_run_history (char      **tokens,
-                     state_t    *state,
-                     history_t  *history)
+builtin_run_history (char         **tokens,
+                     invocation_t  *invocation,
+                     history_t     *history)
 {
     char *arg;
-    int index;
-    int min;
-    int max;
 
     arg = tokens[1];
 
-    if (!arg) {
-        history_print (history);
-        return TRUE;
+    if (arg) {
+        // handle replaying
+        history_transform (history, &invocation);
+        return FALSE;
     }
 
-    history_get_range (history, &min, &max);
-
-    index = atoi (arg);
-    if (index >= min && index <= max) {
-        char **tokens;
-        tokens = history_get_tokens (history, index);
-
-        // todo: pass in invocation
-        dispatch (state, tokens);
-        return TRUE;
-    }
-
-    printf ("Argument must be a number between %d and %d\n", min, max);
-
+    history_print (history);
     return TRUE;
 }

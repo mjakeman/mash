@@ -63,7 +63,7 @@ handle_builtin (state_t      *state,
     if ((strcmp (tokens[0], "h") == 0) ||
         (strcmp (tokens[0], "history") == 0)) {
         // TODO: Handle equivalent history index (i.e. on the fourth command, issuing 'h 4')
-        // return builtin_run_history (tokens, state, state->history);
+        return builtin_run_history (tokens, state, state->history);
     }
 
     if (strcmp (tokens[0], "fg") == 0) {
@@ -88,14 +88,17 @@ dispatch (state_t      *state,
           invocation_t *invocation)
 {
     pid_t pid;
-
-    // todo: fix history
-    // history_push (state->history, tokens);
+    bool handled;
 
     // check if built-in and return, otherwise proceed as normal
     //  - from piazza @23: ignore the use of built-in commands in pipelines
     //  - from piazza @30: do not need to run built-in commands as jobs
-    if (handle_builtin (state, invocation)) {
+    handled = handle_builtin (state, invocation);
+
+    // we need to push after handling built-ins to support replaying
+    history_push (state->history, invocation);
+
+    if (handled) {
         return;
     }
 

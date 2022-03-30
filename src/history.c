@@ -8,7 +8,7 @@
 typedef struct history_entry_t
 {
     int id;
-    char **tokens;
+    invocation_t *invocation;
     struct history_entry_t *next;
 } history_entry_t;
 
@@ -22,14 +22,14 @@ typedef struct history_entry_t
  *
  */
 history_entry_t *
-history_entry_new (int    id,
-                   char **tokens)
+history_entry_new (int           id,
+                   invocation_t *invocation)
 {
     history_entry_t *entry;
 
     entry = calloc (1, sizeof (history_entry_t));
     entry->id = id;
-    entry->tokens = tokens;
+    entry->invocation = invocation_copy (invocation);
     entry->next = NULL;
 
     return entry;
@@ -50,7 +50,7 @@ history_entry_clear (history_entry_t **pointer)
 
     entry = *pointer;
 
-    free (entry->tokens);
+    invocation_free (entry->invocation);
     free (entry);
 
     *pointer = NULL;
@@ -105,19 +105,19 @@ history_get_range (history_t *self,
 }
 
 /**
- * history_get_tokens:
+ * history_get_invocation:
  *
- * Retrieve tokens for given index from history.
+ * Retrieve invocation for given index from history.
  *
  * @self: History object
  * @id: History index to lookup
  *
- * Returns: String array of tokens (owned by #history_t instance)
+ * Returns: Invocation (owned by #history_t instance)
  *
  */
-char **
-history_get_tokens (history_t *self,
-                    int        id)
+invocation_t *
+history_get_invocation (history_t *self,
+                        int        id)
 {
     int min, max;
     history_entry_t *iter;
@@ -129,7 +129,7 @@ history_get_tokens (history_t *self,
              iter != NULL;
              iter = iter->next) {
             if (iter->id == id) {
-                return iter->tokens;
+                return iter->invocation;
             }
         }
     }
@@ -159,7 +159,7 @@ history_print (history_t *self)
     {
         char *command;
 
-        command = tokens_to_string (iter->tokens);
+        command = tokens_to_string (iter->invocation->tokens);
         printf ("%d : %s\n", iter->id, command);
         free (command);
     }
@@ -229,19 +229,55 @@ history_dequeue (history_t *self)
  * total entries exceeds #MAX_HISTORY.
  *
  * @self pointer to history object
- * @tokens string array of tokens
+ * @invocation a command invocation
  *
  */
 void
-history_push (history_t  *self,
-              char      **tokens)
+history_push (history_t    *self,
+              invocation_t *invocation)
 {
     history_entry_t *entry;
 
-    entry = history_entry_new (self->cur_index++, tokens);
+    entry = history_entry_new (self->cur_index++, invocation);
 
     if (self->n_entries >= MAX_HISTORY)
         history_dequeue (self);
 
     history_queue (self, entry);
+}
+
+void
+history_transform (history_t     *self,
+                   invocation_t **command)
+{
+    int index;
+    int min;
+    int max;
+    char **tokens;
+
+    tokens = (*command)->tokens;
+
+    if (strcmp (tokens[0], "history") != 0) {
+        return;
+    }
+
+    if (!tokens[1]) {
+        return;
+    }
+
+    index = atoi (tokens[1]);
+
+    history_get_range (self, &min, &max);
+    if (index >= min && index <= max) {
+        invocation_t *invocation;
+        invocation = history_get_invocation (self, index);
+
+        invocation_free (*command);
+        *command = invocation_copy (invocation);
+        return;
+    }
+
+    printf ("Argument must be a number between %d and %d\n", min, max);
+
+    return;
 }

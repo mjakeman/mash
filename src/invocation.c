@@ -89,7 +89,8 @@ invocation_copy (invocation_t *self)
 
         command_t *command;
         command = calloc (1, sizeof (command_t));
-        memcpy (old_iter, command, sizeof (command_t));
+        command->n_tokens = old_iter->n_tokens;
+        command->index = old_iter->index;
         command->next = NULL;
 
         if (prev) {

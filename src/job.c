@@ -107,6 +107,7 @@ job_dir_run_as_foreground (job_dir_t *self,
 
         if (found) {
             self->foreground = iter;
+            self->foreground->id = FOREGROUND_JOB_ID;
             if (--self->n_jobs == 0) {
                 self->cur_id = 1;
             }
@@ -317,4 +318,6 @@ job_dir_print_all (job_dir_t *self)
         printf ("[%d] <%s>  %s\n", iter->id, state, command);
         free (command);
     }
+
+    printf("\n");
 }
