@@ -36,14 +36,14 @@ job_dir_new_in_foreground (job_dir_t    *self,
                            invocation_t *invocation,
                            pid_t         pid);
 
-void
+bool
 job_dir_run_as_foreground (job_dir_t *self,
                            int        id);
 
-void
+bool
 job_dir_run_as_background (job_dir_t *self,
                            int        id);
 
-void
+bool
 job_dir_kill (job_dir_t *self,
               int        id);

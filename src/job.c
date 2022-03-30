@@ -77,7 +77,7 @@ job_dir_register_job (job_dir_t    *self,
     job_dir_register_job_internal (self, job);
 }
 
-void
+bool
 job_dir_run_as_foreground (job_dir_t *self,
                            int        id)
 {
@@ -119,18 +119,19 @@ job_dir_run_as_foreground (job_dir_t *self,
                 self->jobs = iter->next;
             }
 
-            break;
+            kill (self->foreground->pid, SIGCONT);
+            waitpid (self->foreground->pid, NULL, WUNTRACED);
+            return TRUE;
         }
 
         prev = iter;
         iter = iter->next;
     }
 
-    kill (self->foreground->pid, SIGCONT);
-    waitpid (self->foreground->pid, NULL, WUNTRACED);
+    return FALSE;
 }
 
-void
+bool
 job_dir_run_as_background (job_dir_t *self,
                            int        id)
 {
@@ -140,20 +141,22 @@ job_dir_run_as_background (job_dir_t *self,
     while (iter != NULL) {
         if (iter->id == id) {
             kill (iter->pid, SIGCONT);
-            return;
+            return TRUE;
         }
 
         // id of -1 affects most recent job
         if (id == -1 && iter->next == NULL) {
             kill (iter->pid, SIGCONT);
-            return;
+            return TRUE;
         }
 
         iter = iter->next;
     }
+
+    return FALSE;
 }
 
-void
+bool
 job_dir_kill (job_dir_t *self,
               int        id)
 {
@@ -164,19 +167,21 @@ job_dir_kill (job_dir_t *self,
     while (iter != NULL) {
         if (iter->id == id) {
             kill (iter->pid, SIGKILL);
-            break;
+            waitpid (iter->pid, NULL, 0);
+            return TRUE;
         }
 
         // id of -1 affects most recent job
         if (id == -1 && iter->next == NULL) {
             kill (iter->pid, SIGKILL);
-            break;
+            waitpid (iter->pid, NULL, 0);
+            return TRUE;
         }
 
         iter = iter->next;
     }
 
-    waitpid (iter->pid, NULL, 0);
+    return FALSE;
 }
 
 void

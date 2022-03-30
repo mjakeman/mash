@@ -63,9 +63,10 @@ handle_builtin (state_t      *state,
     if ((strcmp (tokens[0], "h") == 0) ||
         (strcmp (tokens[0], "history") == 0)) {
         // TODO: Handle equivalent history index (i.e. on the fourth command, issuing 'h 4')
-        return builtin_run_history (tokens, state, state->history);
+        return builtin_run_history (tokens, invocation, state->history);
     }
 
+    // TODO: Fix fg/bg/kill for invalid index or letter
     if (strcmp (tokens[0], "fg") == 0) {
         return builtin_run_fg (tokens, state->jobs);
     }
@@ -128,6 +129,7 @@ handler ()
 
 int main ()
 {
+    // TODO: Handle file redirection
     printf ("mAsh! Matthew's Shell\n");
 
     bool running;

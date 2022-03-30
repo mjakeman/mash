@@ -41,9 +41,12 @@ builtin_run_jobs (job_dir_t *jobs)
     return TRUE;
 }
 
-bool
-builtin_run_fg (char      **tokens,
-                job_dir_t  *jobs)
+typedef bool (*job_func)(job_dir_t *, int index);
+
+static bool
+run_for_job (char      **tokens,
+             job_dir_t  *jobs,
+             job_func    func)
 {
     char *arg;
     int index;
@@ -52,50 +55,48 @@ builtin_run_fg (char      **tokens,
 
     if (arg) {
         index = atoi (arg);
-        job_dir_run_as_foreground (jobs, index);
-        return TRUE;
+
+        if (index == 0)
+            goto error;
+
+        if (!func (jobs, index))
+            goto error;
+    }
+    else {
+        if (!func (jobs, -1))
+            goto error2;
     }
 
-    job_dir_run_as_foreground (jobs, -1);
     return TRUE;
+
+error:
+    printf ("Must provide a valid job number.\n");
+    return TRUE;
+
+error2:
+    printf ("There are no jobs.\n");
+    return TRUE;
+}
+
+bool
+builtin_run_fg (char      **tokens,
+                job_dir_t  *jobs)
+{
+    return run_for_job (tokens, jobs, job_dir_run_as_foreground);
 }
 
 bool
 builtin_run_bg (char      **tokens,
                 job_dir_t  *jobs)
 {
-    char *arg;
-    int index;
-
-    arg = tokens[1];
-
-    if (arg) {
-        index = atoi (arg);
-        job_dir_run_as_background (jobs, index);
-        return TRUE;
-    }
-
-    job_dir_run_as_background (jobs, -1);
-    return TRUE;
+    return run_for_job (tokens, jobs, job_dir_run_as_background);
 }
 
 bool
 builtin_run_kill (char      **tokens,
                   job_dir_t  *jobs)
 {
-    char *arg;
-    int index;
-
-    arg = tokens[1];
-
-    if (arg) {
-        index = atoi (arg);
-        job_dir_kill (jobs, index);
-        return TRUE;
-    }
-
-    job_dir_kill (jobs, -1);
-    return TRUE;
+    return run_for_job (tokens, jobs, job_dir_kill);
 }
 
 /**
