@@ -86,7 +86,6 @@ job_dir_run_as_foreground (job_dir_t *self,
     bool found;
 
     if (self->foreground) {
-        fprintf (stderr, "There is already a foreground process\n");
         job_dir_suspend_foreground (self);
     }
 
@@ -262,6 +261,24 @@ job_dir_flush (job_dir_t *self)
 }
 
 void
+job_dir_kill_all (job_dir_t *self)
+{
+    // kill all jobs and die
+    if (self->foreground) {
+        kill (self->foreground->pid, SIGKILL);
+    }
+
+    job_t *iter;
+
+    iter = self->jobs;
+    while (iter != NULL) {
+        kill (iter->pid, SIGKILL);
+        waitpid (iter->pid, NULL, 0);
+        iter = iter->next;
+    }
+}
+
+void
 job_dir_iterate (job_dir_t *self)
 {
     job_t *iter;
@@ -274,8 +291,6 @@ job_dir_iterate (job_dir_t *self)
         if (waitpid (iter->pid, NULL, WNOHANG)) {
             char *string;
             // job state has changed
-            // TODO: check if this is termination (or stopped/started/etc)
-
             // flag job for removal
             iter->dirty = TRUE;
 

@@ -47,3 +47,6 @@ job_dir_run_as_background (job_dir_t *self,
 bool
 job_dir_kill (job_dir_t *self,
               int        id);
+
+void
+job_dir_kill_all (job_dir_t *self);

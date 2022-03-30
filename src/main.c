@@ -18,6 +18,7 @@ struct state_t
 };
 
 static state_t state;
+static bool running;
 
 void print_prompt ()
 {
@@ -49,7 +50,8 @@ handle_builtin (state_t      *state,
     tokens = invocation_command_get_tokens (invocation, first_command);
 
     if (strcmp (tokens[0], "exit") == 0) {
-        exit (EXIT_SUCCESS);
+        RUNNING = FALSE;
+        return TRUE;
     }
 
     if (strcmp (tokens[0], "cd") == 0) {
@@ -60,7 +62,6 @@ handle_builtin (state_t      *state,
         return builtin_run_jobs (state->jobs);
     }
 
-    // TODO: Fix fg/bg/kill for invalid index or letter
     if (strcmp (tokens[0], "fg") == 0) {
         return builtin_run_fg (tokens, state->jobs);
     }
@@ -195,11 +196,17 @@ dispatch (state_t      *state,
 }
 
 void
-handler ()
+suspend ()
 {
     // Register job
     job_dir_suspend_foreground (state.jobs);
-    signal (SIGTSTP, handler);
+    signal (SIGTSTP, suspend);
+}
+
+void
+shutdown ()
+{
+    RUNNING = FALSE;
 }
 
 int main ()
@@ -207,17 +214,17 @@ int main ()
     // TODO: Handle file redirection
     printf ("mAsh! Matthew's Shell\n");
 
-    bool running;
     state.history = history_new ();
     state.jobs = job_dir_new ();
     state.home_dir = calloc (1, sizeof (char) * BUFFER_SIZE);
     getcwd (state.home_dir, BUFFER_SIZE);
 
-    signal (SIGTSTP, handler);
+    signal (SIGTSTP, suspend);
+    signal (SIGINT, shutdown);
 
-    running = TRUE;
+    RUNNING = TRUE;
 
-    while (running)
+    while (RUNNING)
     {
         invocation_t *invocation;
         char *input;
@@ -236,5 +243,7 @@ int main ()
         invocation = NULL;
     }
 
-    // TODO: kill all job processes
+    // Kill all jobs
+    printf ("Goodbye!\n");
+    job_dir_kill_all (state.jobs);
 }

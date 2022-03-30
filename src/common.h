@@ -47,3 +47,6 @@ void dispatch (state_t      *state,
 
 // Token to string method
 char *tokens_to_string (char **tokens);
+
+// Global Running Variable
+static bool RUNNING = TRUE;
