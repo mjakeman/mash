@@ -18,9 +18,20 @@ struct state_t
 };
 
 static state_t state;
-static bool running;
 
-void print_prompt ()
+void
+print_if_file (invocation_t *invocation)
+{
+    if (!isatty (STDIN_FILENO)) {
+        char *string;
+        string = tokens_to_string (invocation->tokens);
+        printf ("%s\n", string);
+        free (string);
+    }
+}
+
+void
+print_prompt ()
 {
     char *cur_dir;
     char cwd[BUFFER_SIZE];
@@ -146,6 +157,7 @@ handle_history (state_t      *state,
     }
     else {
         // add this command before printing
+        print_if_file (invocation);
         history_push (state->history, invocation);
         history_print (state->history);
     }
@@ -159,6 +171,9 @@ dispatch (state_t      *state,
 {
     pid_t pid;
 
+    if (!invocation)
+        return;
+
     // return if no command
     if (invocation->n_commands == 0)
         return;
@@ -170,6 +185,10 @@ dispatch (state_t      *state,
         return;
     }
 
+    // Print the invocation input is being redirected from a file
+    print_if_file (invocation);
+
+    // Add this invocation to history
     history_push (state->history, invocation);
 
     // check if built-in and return, otherwise proceed as normal
@@ -211,7 +230,6 @@ shutdown ()
 
 int main ()
 {
-    // TODO: Handle file redirection
     printf ("mAsh! Matthew's Shell\n");
 
     state.history = history_new ();
@@ -234,9 +252,16 @@ int main ()
         job_dir_flush (state.jobs);
 
         print_prompt ();
-        input = get_input ();
-        invocation = parse_input (input);
 
+        input = get_input ();
+
+        // Check for EOF if using file input
+        if (!isatty (STDIN_FILENO) && !input) {
+            RUNNING = FALSE;
+            break;
+        }
+
+        invocation = parse_input (input);
         dispatch (&state, invocation);
 
         invocation_free (invocation);

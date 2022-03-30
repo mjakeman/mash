@@ -15,7 +15,7 @@ get_input ()
     length = getline (&buffer, &buffer_size, stdin);
 
     if (length == -1) {
-        fprintf (stderr, "Unable to read line\n");
+        // Invalid input (e.g. EOF for file redirection)
         return NULL;
     }
 

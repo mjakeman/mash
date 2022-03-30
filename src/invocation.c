@@ -112,6 +112,9 @@ invocation_free (invocation_t *self)
     command_t *iter;
     command_t *to_free;
 
+    if (!self)
+        return;
+
     iter = self->commands;
 
     while (iter != NULL) {
