@@ -135,6 +135,33 @@ job_dir_print_all (job_dir_t *self)
     for (iter = self->jobs;
          iter != NULL;
          iter = iter->next) {
-        printf ("job id %d / pid %d\n", iter->id, iter->pid);
+
+        const char *state;
+        char *command;
+
+        switch (process_get_state (iter->pid))
+        {
+        case PROCESS_STATE_IDLE:
+            state = "Idle";
+            break;
+        case PROCESS_STATE_ZOMBIE:
+            state = "Zombie";
+            break;
+        case PROCESS_STATE_RUNNABLE:
+            state = "Runnable";
+            break;
+        case PROCESS_STATE_SLEEPING:
+            state = "Sleeping";
+            break;
+        case PROCESS_STATE_STOPPED:
+            state = "Stopped";
+            break;
+        default:
+            state = "Unknown";
+        }
+
+        command = tokens_to_string (iter->invocation->tokens);
+        printf ("[%d] <%s>  %s\n", iter->id, state, command);
+        free (command);
     }
 }

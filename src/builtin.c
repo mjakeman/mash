@@ -34,6 +34,13 @@ builtin_run_chdir (char **tokens,
     return TRUE;
 }
 
+bool
+builtin_run_jobs (job_dir_t *jobs)
+{
+    job_dir_print_all (jobs);
+    return TRUE;
+}
+
 /**
  * builtin_run_history:
  *

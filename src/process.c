@@ -47,7 +47,6 @@ process_get_state (pid_t pid)
 
     if (fd) {
         fscanf (fd, "%s %s %s", pid_str, cmd, status);
-        printf ("status: %s\n", status);
 
         if (strcmp (status, "S") == 0)
             result = PROCESS_STATE_SLEEPING;

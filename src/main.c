@@ -54,6 +54,10 @@ handle_builtin (state_t      *state,
         return builtin_run_chdir (tokens, state->home_dir);
     }
 
+    if (strcmp (tokens[0], "jobs") == 0) {
+        return builtin_run_jobs (state->jobs);
+    }
+
     if ((strcmp (tokens[0], "h") == 0) ||
         (strcmp (tokens[0], "history") == 0)) {
         // TODO: Handle equivalent history index (i.e. on the fourth command, issuing 'h 4')
@@ -118,7 +122,6 @@ int main ()
         // check jobs
         job_dir_iterate (state.jobs);
         job_dir_flush (state.jobs);
-        job_dir_print_all (state.jobs);
 
         print_prompt ();
         input = get_input ();
