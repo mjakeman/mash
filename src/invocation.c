@@ -6,8 +6,8 @@
 invocation_t *
 invocation_new ()
 {
-    invocation_t *result = malloc (sizeof (invocation_t));
-    result->tokens = malloc (sizeof (char *) * TOKEN_ARRAY_SIZE);
+    invocation_t *result = calloc (1, sizeof (invocation_t));
+    result->tokens = calloc (1, sizeof (char *) * TOKEN_ARRAY_SIZE);
     return result;
 }
 
@@ -26,7 +26,7 @@ invocation_command_get_tokens (invocation_t *self,
 
     // return a null terminated array containing
     // only the tokens for this command (needed for execvp)
-    tokens_cpy = malloc (sizeof (char *) * (n_tokens + 1));
+    tokens_cpy = calloc (1, sizeof (char *) * (n_tokens + 1));
     memcpy (tokens_cpy, &self->tokens[index], n_tokens * sizeof (char *));
     tokens_cpy [n_tokens] = NULL;
 
@@ -41,7 +41,7 @@ invocation_push_command (invocation_t *self,
     command_t *command;
     command_t *iter;
 
-    command = malloc (sizeof (command_t));
+    command = calloc (1, sizeof (command_t));
     command->index = index;
     command->n_tokens = n_tokens;
 
@@ -72,12 +72,12 @@ invocation_copy (invocation_t *self)
     command_t *prev;
 
     // deep copy
-    new = malloc (sizeof (invocation_t));
+    new = calloc (1, sizeof (invocation_t));
     new->is_job = self->is_job;
     new->n_commands = self->is_job;
 
     token_size = sizeof (char *) * TOKEN_ARRAY_SIZE;
-    new->tokens = malloc (token_size);
+    new->tokens = calloc (1, token_size);
     memcpy (new->tokens, self->tokens, token_size);
 
     prev = NULL;
@@ -88,7 +88,7 @@ invocation_copy (invocation_t *self)
          old_iter = old_iter->next) {
 
         command_t *command;
-        command = malloc (sizeof (command_t));
+        command = calloc (1, sizeof (command_t));
         memcpy (old_iter, command, sizeof (command_t));
         command->next = NULL;
 

@@ -27,7 +27,7 @@ history_entry_new (int    id,
 {
     history_entry_t *entry;
 
-    entry = malloc (sizeof (history_entry_t));
+    entry = calloc (1, sizeof (history_entry_t));
     entry->id = id;
     entry->tokens = tokens;
     entry->next = NULL;
@@ -75,7 +75,7 @@ history_new ()
 {
     history_t *history;
 
-    history = malloc (sizeof (history_t));
+    history = calloc (1, sizeof (history_t));
     history->cur_index = 1;
     return history;
 }

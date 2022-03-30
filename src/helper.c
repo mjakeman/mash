@@ -18,7 +18,7 @@ tokens_to_string (char **tokens)
         return NULL;
 
     buffer_size = BUFFER_SIZE;
-    output = malloc (sizeof (char) * buffer_size);
+    output = calloc (1, sizeof (char) * buffer_size);
     output[0] = '\0';
 
     index = 0;

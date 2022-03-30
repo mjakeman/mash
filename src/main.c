@@ -105,7 +105,7 @@ int main ()
     state_t state;
     state.history = history_new ();
     state.jobs = job_dir_new ();
-    state.home_dir = malloc (sizeof (char) * BUFFER_SIZE);
+    state.home_dir = calloc (1, sizeof (char) * BUFFER_SIZE);
     getcwd (state.home_dir, BUFFER_SIZE);
 
     running = TRUE;

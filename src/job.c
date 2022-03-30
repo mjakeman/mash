@@ -25,7 +25,7 @@ job_dir_t *
 job_dir_new ()
 {
     job_dir_t *self;
-    self = malloc (sizeof (job_dir_t));
+    self = calloc (1, sizeof (job_dir_t));
     return self;
 }
 
@@ -37,7 +37,7 @@ job_dir_register_job (job_dir_t    *self,
     job_t *iter;
     job_t *job;
 
-    job = malloc (sizeof (job_t));
+    job = calloc (1, sizeof (job_t));
     job->pid = pid;
     job->id = self->cur_id++;
     job->invocation = invocation_copy (invocation);
