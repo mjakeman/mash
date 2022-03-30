@@ -269,6 +269,6 @@ int main ()
     }
 
     // Kill all jobs
-    printf ("Goodbye!\n");
+    // printf ("Goodbye!\n");
     job_dir_kill_all (state.jobs);
 }
