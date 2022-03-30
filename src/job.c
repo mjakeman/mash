@@ -85,9 +85,9 @@ job_dir_run_as_foreground (job_dir_t *self,
     job_t *prev;
     bool found;
 
-    if (self->foreground) {
+    /*if (self->foreground) {
         job_dir_suspend_foreground (self);
-    }
+    }*/
 
     prev = NULL;
     iter = self->jobs;
