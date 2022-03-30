@@ -274,7 +274,7 @@ job_dir_iterate (job_dir_t *self)
         if (waitpid (iter->pid, NULL, WNOHANG)) {
             char *string;
             // job state has changed
-            // todo: check if this is termination (or stopped/started/etc)
+            // TODO: check if this is termination (or stopped/started/etc)
 
             // flag job for removal
             iter->dirty = TRUE;

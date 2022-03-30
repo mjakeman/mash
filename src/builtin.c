@@ -116,16 +116,5 @@ builtin_run_history (char         **tokens,
                      invocation_t  *invocation,
                      history_t     *history)
 {
-    char *arg;
 
-    arg = tokens[1];
-
-    if (arg) {
-        // handle replaying
-        history_transform (history, &invocation);
-        return FALSE;
-    }
-
-    history_print (history);
-    return TRUE;
 }

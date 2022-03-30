@@ -60,12 +60,6 @@ handle_builtin (state_t      *state,
         return builtin_run_jobs (state->jobs);
     }
 
-    if ((strcmp (tokens[0], "h") == 0) ||
-        (strcmp (tokens[0], "history") == 0)) {
-        // TODO: Handle equivalent history index (i.e. on the fourth command, issuing 'h 4')
-        return builtin_run_history (tokens, invocation, state->history);
-    }
-
     // TODO: Fix fg/bg/kill for invalid index or letter
     if (strcmp (tokens[0], "fg") == 0) {
         return builtin_run_fg (tokens, state->jobs);
@@ -85,21 +79,102 @@ handle_builtin (state_t      *state,
 }
 
 void
+replay_history (state_t *state,
+                char    *arg)
+{
+    int index;
+    int min;
+    int max;
+    invocation_t *replay;
+    invocation_t *copy;
+
+    history_get_range (state->history, &min, &max);
+
+    index = atoi (arg);
+
+    if (index == 0)
+        goto error;
+
+    if (index < min || index > max)
+        goto error;
+
+    // get the invocation to replay
+    replay = history_get_invocation (state->history, index);
+
+    // perform a deep copy and execute
+    copy = invocation_copy (replay);
+    dispatch (state, copy);
+    invocation_free (copy);
+
+    return;
+
+error:
+    printf ("Argument must be a number between %d and %d\n", min, max);
+}
+
+bool
+handle_history (state_t      *state,
+                invocation_t *invocation)
+{
+    // returns
+    //  - TRUE if the command has been handled
+    //  - FALSE if execution should continue
+
+    command_t *first_command;
+    char **tokens;
+    char *arg;
+
+    first_command = invocation->commands;
+
+    if (!first_command || !(first_command->n_tokens))
+        return FALSE;
+
+    // get tokens as null terminated array
+    tokens = invocation_command_get_tokens (invocation, first_command);
+
+    // return if we are not the history command
+    if ((strcmp (tokens[0], "h") != 0) &&
+        (strcmp (tokens[0], "history") != 0)) {
+        return FALSE;
+    }
+
+    arg = tokens[1];
+
+    if (arg) {
+        replay_history (state, arg);
+    }
+    else {
+        // add this command before printing
+        history_push (state->history, invocation);
+        history_print (state->history);
+    }
+
+    return TRUE;
+}
+
+void
 dispatch (state_t      *state,
           invocation_t *invocation)
 {
     pid_t pid;
-    bool handled;
+
+    // return if no command
+    if (invocation->n_commands == 0)
+        return;
+
+    // special case the history command as history needs to
+    // be aware of itself and replay an earlier invocation if
+    // necessary
+    if (handle_history (state, invocation)) {
+        return;
+    }
+
+    history_push (state->history, invocation);
 
     // check if built-in and return, otherwise proceed as normal
     //  - from piazza @23: ignore the use of built-in commands in pipelines
     //  - from piazza @30: do not need to run built-in commands as jobs
-    handled = handle_builtin (state, invocation);
-
-    // we need to push after handling built-ins to support replaying
-    history_push (state->history, invocation);
-
-    if (handled) {
+    if (handle_builtin (state, invocation)) {
         return;
     }
 
@@ -161,5 +236,5 @@ int main ()
         invocation = NULL;
     }
 
-    // todo: kill all job processes
+    // TODO: kill all job processes
 }

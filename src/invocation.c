@@ -74,7 +74,7 @@ invocation_copy (invocation_t *self)
     // deep copy
     new = calloc (1, sizeof (invocation_t));
     new->is_job = self->is_job;
-    new->n_commands = self->is_job;
+    new->n_commands = self->n_commands;
 
     token_size = sizeof (char *) * TOKEN_ARRAY_SIZE;
     new->tokens = calloc (1, token_size);
