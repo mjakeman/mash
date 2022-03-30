@@ -13,3 +13,12 @@ bool builtin_run_history (char      **tokens,
                           history_t  *history);
 
 bool builtin_run_jobs (job_dir_t *jobs);
+
+bool builtin_run_fg (char      **tokens,
+                     job_dir_t  *jobs);
+
+bool builtin_run_bg (char      **tokens,
+                     job_dir_t  *jobs);
+
+bool builtin_run_kill (char      **tokens,
+                       job_dir_t  *jobs);

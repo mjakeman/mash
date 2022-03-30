@@ -27,3 +27,23 @@ job_dir_iterate (job_dir_t *self);
 
 void
 job_dir_print_all (job_dir_t *self);
+
+void
+job_dir_suspend_foreground (job_dir_t *self);
+
+void
+job_dir_new_in_foreground (job_dir_t    *self,
+                           invocation_t *invocation,
+                           pid_t         pid);
+
+void
+job_dir_run_as_foreground (job_dir_t *self,
+                           int        id);
+
+void
+job_dir_run_as_background (job_dir_t *self,
+                           int        id);
+
+void
+job_dir_kill (job_dir_t *self,
+              int        id);

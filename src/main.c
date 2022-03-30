@@ -15,9 +15,6 @@ struct state_t
     char *home_dir;
     history_t *history;
     job_dir_t *jobs;
-
-    pid_t active_pid;
-    invocation_t *active_invocation;
 };
 
 static state_t state;
@@ -69,6 +66,18 @@ handle_builtin (state_t      *state,
         // return builtin_run_history (tokens, state, state->history);
     }
 
+    if (strcmp (tokens[0], "fg") == 0) {
+        return builtin_run_fg (tokens, state->jobs);
+    }
+
+    if (strcmp (tokens[0], "bg") == 0) {
+        return builtin_run_bg (tokens, state->jobs);
+    }
+
+    if (strcmp (tokens[0], "kill") == 0) {
+        return builtin_run_kill (tokens, state->jobs);
+    }
+
     free (tokens);
 
     return FALSE;
@@ -102,28 +111,16 @@ dispatch (state_t      *state,
         job_dir_register_job (state->jobs, invocation, pid);
     }
     else {
-        if (state->active_pid) {
-            state->active_pid = -1;
-            invocation_free (state->active_invocation);
-        }
-
-        state->active_pid = pid;
-        state->active_invocation = invocation_copy (invocation);
-        waitpid (pid, NULL, WUNTRACED);
+        job_dir_new_in_foreground (state->jobs, invocation, pid);
     }
 }
 
 void
 handler ()
 {
-    kill (state.active_pid, SIGSTOP);
-    signal (SIGTSTP, handler);
-    printf ("\n");
-
     // Register job
-    job_dir_register_job (state.jobs,
-                          state.active_invocation,
-                          state.active_pid);
+    job_dir_suspend_foreground (state.jobs);
+    signal (SIGTSTP, handler);
 }
 
 int main ()

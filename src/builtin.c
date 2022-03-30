@@ -41,6 +41,63 @@ builtin_run_jobs (job_dir_t *jobs)
     return TRUE;
 }
 
+bool
+builtin_run_fg (char      **tokens,
+                job_dir_t  *jobs)
+{
+    char *arg;
+    int index;
+
+    arg = tokens[1];
+
+    if (arg) {
+        index = atoi (arg);
+        job_dir_run_as_foreground (jobs, index);
+        return TRUE;
+    }
+
+    job_dir_run_as_foreground (jobs, -1);
+    return TRUE;
+}
+
+bool
+builtin_run_bg (char      **tokens,
+                job_dir_t  *jobs)
+{
+    char *arg;
+    int index;
+
+    arg = tokens[1];
+
+    if (arg) {
+        index = atoi (arg);
+        job_dir_run_as_background (jobs, index);
+        return TRUE;
+    }
+
+    job_dir_run_as_background (jobs, -1);
+    return TRUE;
+}
+
+bool
+builtin_run_kill (char      **tokens,
+                  job_dir_t  *jobs)
+{
+    char *arg;
+    int index;
+
+    arg = tokens[1];
+
+    if (arg) {
+        index = atoi (arg);
+        job_dir_kill (jobs, index);
+        return TRUE;
+    }
+
+    job_dir_kill (jobs, -1);
+    return TRUE;
+}
+
 /**
  * builtin_run_history:
  *
