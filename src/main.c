@@ -126,8 +126,8 @@ int main ()
 
         dispatch (&state, invocation);
 
-        // todo: memory management
-        // invocation_free (invocation);
+        invocation_free (invocation);
+        invocation = NULL;
     }
 
     // todo: kill all job processes

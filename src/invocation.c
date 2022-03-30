@@ -15,6 +15,8 @@ char **
 invocation_command_get_tokens (invocation_t *self,
                                command_t    *command)
 {
+    // caller must free!
+
     char **tokens_cpy;
     int n_tokens;
     int index;

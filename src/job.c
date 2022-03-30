@@ -85,6 +85,7 @@ job_dir_flush (job_dir_t *self)
                 prev->next = after;
             }
 
+            invocation_free (iter->invocation);
             free (iter);
             if (--self->n_jobs == 0) {
                 self->cur_id = 1;
@@ -109,14 +110,16 @@ job_dir_iterate (job_dir_t *self)
          iter != NULL;
          iter = iter->next) {
         if (waitpid (iter->pid, NULL, WNOHANG)) {
+            char *string;
             // job state has changed
             // todo: check if this is termination (or stopped/started/etc)
 
             // flag job for removal
             iter->dirty = TRUE;
 
-            // todo: pass invocation to job
-            printf ("[%d] <Done>  %s\n", iter->id, "COMMAND GOES HERE");
+            string = tokens_to_string (iter->invocation->tokens);
+            printf ("[%d] <Done>  %s\n", iter->id, string);
+            free (string);
         }
     }
 }
