@@ -282,13 +282,17 @@ void
 job_dir_iterate (job_dir_t *self)
 {
     job_t *iter;
+    int status;
 
     // iterates over all jobs to see if any have finished
     for (iter = self->jobs;
          iter != NULL;
          iter = iter->next) {
         process_get_state (iter->pid);
-        if (waitpid (iter->pid, NULL, WNOHANG)) {
+        if (waitpid (iter->pid, &status, WNOHANG)) {
+            if (!WIFEXITED (status))
+                continue;
+
             char *string;
             // job state has changed
             // flag job for removal
