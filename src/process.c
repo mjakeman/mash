@@ -62,9 +62,9 @@ process_get_state (pid_t pid)
 
         else if (strcmp (status, "Z") == 0)
             result = PROCESS_STATE_ZOMBIE;
-    }
 
-    fclose (fd);
+        fclose (fd);
+    }
 
     return result;
 }
