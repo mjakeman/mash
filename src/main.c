@@ -118,7 +118,7 @@ replay_history (state_t *state,
 
     // perform a deep copy and execute
     copy = invocation_copy (replay);
-    dispatch (state, copy);
+    dispatch (state, copy, TRUE);
     invocation_free (copy);
 
     return;
@@ -160,7 +160,6 @@ handle_history (state_t      *state,
     }
     else {
         // add this command before printing
-        print_if_file (invocation);
         history_push (state->history, invocation);
         history_print (state->history);
     }
@@ -170,7 +169,8 @@ handle_history (state_t      *state,
 
 void
 dispatch (state_t      *state,
-          invocation_t *invocation)
+          invocation_t *invocation,
+          bool          inhibit_print)
 {
     pid_t pid;
 
@@ -181,6 +181,11 @@ dispatch (state_t      *state,
     if (invocation->n_commands == 0)
         return;
 
+    // Print the invocation input is being redirected from a file
+    if (!inhibit_print) {
+        print_if_file (invocation);
+    }
+
     // special case the history command as history needs to
     // be aware of itself and replay an earlier invocation if
     // necessary
@@ -188,8 +193,6 @@ dispatch (state_t      *state,
         return;
     }
 
-    // Print the invocation input is being redirected from a file
-    print_if_file (invocation);
 
     // Add this invocation to history
     history_push (state->history, invocation);
@@ -265,7 +268,7 @@ int main ()
         }
 
         invocation = parse_input (input);
-        dispatch (&state, invocation);
+        dispatch (&state, invocation, FALSE);
 
         invocation_free (invocation);
         invocation = NULL;

@@ -43,7 +43,8 @@ typedef struct command_t command_t;
 
 // Dispatch method
 void dispatch (state_t      *state,
-               invocation_t *invocation);
+               invocation_t *invocation,
+               bool          inhibit_print);
 
 // Token to string method
 char *tokens_to_string (char **tokens);
