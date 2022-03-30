@@ -230,7 +230,7 @@ shutdown ()
 
 int main ()
 {
-    printf ("mAsh! Matthew's Shell\n");
+    // printf ("mAsh! Matthew's Shell\n");
 
     state.history = history_new ();
     state.jobs = job_dir_new ();
