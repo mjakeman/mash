@@ -8,10 +8,6 @@
 bool builtin_run_chdir (char **tokens,
                         char  *home_dir);
 
-bool builtin_run_history (char         **tokens,
-                          invocation_t  *invocation,
-                          history_t     *history);
-
 bool builtin_run_jobs (job_dir_t *jobs);
 
 bool builtin_run_fg (char      **tokens,

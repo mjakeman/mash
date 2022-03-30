@@ -98,23 +98,3 @@ builtin_run_kill (char      **tokens,
 {
     return run_for_job (tokens, jobs, job_dir_kill);
 }
-
-/**
- * builtin_run_history:
- *
- * Builtin command for viewing and replaying history.
- *
- * @tokens: String array of tokens
- * @state: Opaque shell state structure
- * @history: History object
- *
- * Returns: Whether the builtin should inhibit normal execution
- *
- */
-bool
-builtin_run_history (char         **tokens,
-                     invocation_t  *invocation,
-                     history_t     *history)
-{
-
-}
