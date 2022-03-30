@@ -1,0 +1,39 @@
+// a1Answers.txt
+// Matthew Jakeman (mjak923)
+
+1) Each part of a pipeline command is started in a different process
+   using fork followed by exec. Explain why the same thing cannot be
+   done by creating threads using pthread_create followed by exec.
+
+In order to create a pipeline, each command pipes its output into the
+following command's input. When forking, the original process is duplicated
+into an entirely separate - but identical - new process. This new process
+has separate memory from the original.
+
+In contrast, a thread is fundamentally a part of the same process as the
+one it was created in. It shares the same process data, except for the stack.
+
+When exec is called, it replaces the calling process with the one that is to
+be executed. In a fork-and-exec scenario, the child process would be replaced
+by the exec command but the parent would continue to operate normally.
+
+For a thread however, it would overwrite both the new thread and the original
+as they are part of the same process. Therefore both processes are overwritten,
+making the intended pipeline not possible.
+
+2) Explain how you deal with stopping restarting a process using CTRL-Z
+   and fg. In particular mention which signals get sent and handled. You
+   can answer this even if you don't get it to work.
+
+When the CTRL-Z keybinding is activated, it causes the SIGTSTP signal
+to be emitted. The shell, which previously registed a signal handler for
+the signal, recieves this and asks the process manager object (part of
+the shell) to stop the foreground process. The process manager takes
+the foreground child process that is executing and 'kills' it with the
+SIGSTOP signal. The child enters the 'Stopped' state.
+
+When fg is called on a stopped job (i.e. process), the SIGCONT signal is sent
+which resumes the child process - it enters the 'Running' state. The shell
+uses the waitpid() method to block on the now-foreground process, meaning the
+shell will not continue execution until the process has either terminated
+or has been suspended again, as described above.
